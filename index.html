@@ -54,13 +54,16 @@
     .preview-panel { background: rgba(255,255,255,0.04); border-radius: 24px; padding: 20px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 16px; }
     .preview-panel .preview-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
     .preview-panel .preview-url { font-size: 14px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.3); padding: 6px 16px; border-radius: 30px; }
-    .preview-frame { background: #1a1a2e; border-radius: 16px; padding: 20px; min-height: 400px; overflow: auto; border: 1px solid rgba(255,255,255,0.05); }
-    .preview-frame .site-preview { color: #eee; font-size: 16px; line-height: 1.6; }
-    .preview-frame .site-preview h2 { color: #f093fb; margin: 12px 0 6px; }
-    .preview-frame .site-preview p { margin: 8px 0; }
-    .preview-frame .site-preview img { max-width: 100%; border-radius: 12px; margin: 10px 0; }
-    .preview-frame .site-preview .btn-preview { display: inline-block; padding: 8px 24px; background: #667eea; border-radius: 40px; color: #fff; border: none; font-weight: 600; cursor: default; text-decoration: none; }
-    .empty-preview { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: rgba(255,255,255,0.25); font-size: 18px; }
+    .preview-frame { background: #1a1a2e; border-radius: 16px; padding: 20px; min-height: 400px; overflow: auto; border: 1px solid rgba(255,255,255,0.05); position: relative; }
+    .preview-frame .site-preview { position: relative; width: 100%; height: 100%; min-height: 400px; }
+    .preview-item { position: absolute; cursor: move; border: 1px solid transparent; padding: 4px; overflow: hidden; }
+    .preview-item:hover { border-color: rgba(255,255,255,0.2); }
+    .preview-item.selected { border: 2px solid #667eea; }
+    .preview-item .resize-handle { position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; background: #667eea; cursor: nwse-resize; border-radius: 0 0 4px 0; display: none; }
+    .preview-item.selected .resize-handle { display: block; }
+    .preview-item img { max-width: 100%; height: auto; display: block; }
+    .preview-item .btn-preview { display: inline-block; padding: 8px 24px; background: #667eea; border-radius: 40px; color: #fff; border: none; font-weight: 600; cursor: default; text-decoration: none; }
+    .empty-preview { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 200px; color: rgba(255,255,255,0.25); font-size: 18px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; text-align: center; }
     .footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); text-align: center; font-size: 14px; color: rgba(255,255,255,0.25); }
     .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 9999; padding: 20px; }
     .modal.active { display: flex; }
@@ -144,12 +147,16 @@
         </div>
       </section>
       <section class="preview-panel">
-        <div class="preview-header"><span class="panel-title">👁️ Превью</span><span class="preview-url">Ваш сайт</span></div>
-        <div class="preview-frame" id="previewFrame"><div class="site-preview" id="sitePreview"><div class="empty-preview">Добавьте блоки</div></div></div>
+        <div class="preview-header"><span class="panel-title">👁️ Превью (перетаскивай и изменяй размер)</span><span class="preview-url">Ваш сайт</span></div>
+        <div class="preview-frame" id="previewFrame">
+          <div class="site-preview" id="sitePreview">
+            <div class="empty-preview">Добавьте блоки</div>
+          </div>
+        </div>
         <button class="btn btn-primary" id="publishBtn" style="align-self: flex-end;">🚀 Опубликовать</button>
       </section>
     </div>
-    <footer class="footer">© 2026 DinoSiteX — конструктор с админ-панелью</footer>
+    <footer class="footer">© 2026 DinoSiteX — конструктор с превью-редактором</footer>
   </div>
 
   <!-- Модалка профиля -->
@@ -250,7 +257,7 @@
     let userPlan = 'free';
     let userExpiry = null;
 
-    // ===== DOM =====
+    // ===== DOM-ссылки =====
     const blocksList = document.getElementById('blocksList');
     const previewFrame = document.getElementById('sitePreview');
     const exportBtn = document.getElementById('exportBtn');
@@ -300,36 +307,10 @@
     const bgImage = document.getElementById('bgImage');
     const applyBgBtn = document.getElementById('applyBgBtn');
 
-    // ===== РЕНДЕРИНГ БЛОКОВ =====
+    // ===== ВСПОМОГАТЕЛЬНЫЕ =====
     function escapeHtml(text) {
       if (!text) return '';
       return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]);
-    }
-
-    let dragIndex = null;
-
-    function renderPreview() {
-      let html = '';
-      if (blocks.length === 0) { html = '<div class="empty-preview">Добавьте блоки</div>'; }
-      else {
-        blocks.forEach(b => {
-          const d = b.data || '';
-          if (b.type === 'header') html += '<h2>' + escapeHtml(d) + '</h2>';
-          else if (b.type === 'text') html += '<p>' + escapeHtml(d).replace(/\n/g, '<br>') + '</p>';
-          else if (b.type === 'image') html += d ? '<img src="' + escapeHtml(d) + '" alt="image">' : '<p style="color:gray;">[картинка]</p>';
-          else if (b.type === 'button') {
-            const url = b.url || '#';
-            html += '<a href="' + escapeHtml(url) + '" class="btn-preview" target="_blank">' + (escapeHtml(d) || 'Кнопка') + '</a>';
-          }
-          else html += '<div>' + escapeHtml(d) + '</div>';
-        });
-      }
-      const bg = getBgSettings();
-      previewFrame.style.background = bg.color || '#1a1a2e';
-      previewFrame.style.backgroundImage = bg.image ? 'url(' + bg.image + ')' : 'none';
-      previewFrame.style.backgroundSize = 'cover';
-      previewFrame.style.backgroundPosition = 'center';
-      previewFrame.innerHTML = html;
     }
 
     function getBgSettings() {
@@ -347,6 +328,80 @@
       localStorage.setItem(BG_KEY, JSON.stringify(settings));
       renderPreview();
     }
+
+    // ===== РАБОТА С БЛОКАМИ =====
+    function addBlock(type) {
+      const newBlock = {
+        type,
+        data: '',
+        x: 20 + Math.random() * 100,
+        y: 20 + Math.random() * 100,
+        width: type === 'image' ? 200 : 250,
+        height: type === 'image' ? 150 : 60
+      };
+      if (type === 'button') newBlock.url = '';
+      blocks.push(newBlock);
+      renderBlocksList();
+      renderPreview();
+      autoSave();
+    }
+
+    function deleteBlock(idx) {
+      blocks.splice(idx, 1);
+      renderBlocksList();
+      renderPreview();
+      autoSave();
+    }
+
+    function moveBlock(idx, dir) {
+      const ni = idx + dir;
+      if (ni < 0 || ni >= blocks.length) return;
+      [blocks[idx], blocks[ni]] = [blocks[ni], blocks[idx]];
+      renderBlocksList();
+      renderPreview();
+      autoSave();
+    }
+
+    function clearBlocks() {
+      if (!blocks.length) return;
+      if (confirm('Удалить все блоки?')) {
+        blocks = [];
+        renderBlocksList();
+        renderPreview();
+        autoSave();
+      }
+    }
+
+    function autoSave() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          const p = JSON.parse(saved);
+          if (Array.isArray(p)) blocks = p;
+        } catch(e) {}
+      }
+      const bg = getBgSettings();
+      bgColor.value = bg.color || '#1a1a2e';
+      bgImage.value = bg.image || '';
+      renderBlocksList();
+      renderPreview();
+    }
+
+    function resetProject() {
+      if (!confirm('Сбросить проект?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      blocks = [];
+      renderBlocksList();
+      renderPreview();
+      autoSave();
+    }
+
+    // ===== РЕНДЕРИНГ СПИСКА (редактор) =====
+    let dragIndex = null;
 
     function renderBlocksList() {
       blocksList.innerHTML = '';
@@ -431,60 +486,139 @@
         }
         blocksList.appendChild(div);
       });
-      renderPreview();
     }
 
-    function addBlock(type) {
-      const newBlock = { type, data: '' };
-      if (type === 'button') newBlock.url = '';
-      blocks.push(newBlock);
-      renderBlocksList();
-      autoSave();
-    }
+    // ===== РЕНДЕРИНГ ПРЕВЬЮ (с абсолютным позиционированием, drag & drop, resize) =====
+    let selectedIndex = null;
 
-    function deleteBlock(idx) {
-      blocks.splice(idx, 1);
-      renderBlocksList();
-      autoSave();
-    }
+    function renderPreview() {
+      const container = previewFrame;
+      let html = '';
+      if (blocks.length === 0) {
+        html = '<div class="empty-preview">Добавьте блоки</div>';
+      } else {
+        blocks.forEach((block, index) => {
+          const d = block.data || '';
+          let content = '';
+          if (block.type === 'header') content = '<h2>' + escapeHtml(d) + '</h2>';
+          else if (block.type === 'text') content = '<p>' + escapeHtml(d).replace(/\n/g, '<br>') + '</p>';
+          else if (block.type === 'image') content = d ? '<img src="' + escapeHtml(d) + '" alt="image">' : '<p style="color:gray;">[картинка]</p>';
+          else if (block.type === 'button') {
+            const url = block.url || '#';
+            content = '<a href="' + escapeHtml(url) + '" class="btn-preview" target="_blank">' + (escapeHtml(d) || 'Кнопка') + '</a>';
+          }
+          else content = '<div>' + escapeHtml(d) + '</div>';
 
-    function moveBlock(idx, dir) {
-      const ni = idx + dir;
-      if (ni < 0 || ni >= blocks.length) return;
-      [blocks[idx], blocks[ni]] = [blocks[ni], blocks[idx]];
-      renderBlocksList();
-      autoSave();
-    }
-
-    function clearBlocks() {
-      if (!blocks.length) return;
-      if (confirm('Удалить все блоки?')) { blocks = []; renderBlocksList(); autoSave(); }
-    }
-
-    function autoSave() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
-    }
-
-    function loadFromStorage() {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
-          const p = JSON.parse(saved);
-          if (Array.isArray(p)) blocks = p;
-        } catch(e) {}
+          const x = block.x || 20;
+          const y = block.y || 20;
+          const w = block.width || 200;
+          const h = block.height || 60;
+          const selectedClass = (selectedIndex === index) ? ' selected' : '';
+          html += `<div class="preview-item${selectedClass}" data-index="${index}" style="left:${x}px; top:${y}px; width:${w}px; height:${h}px; overflow:hidden;">
+            ${content}
+            <div class="resize-handle"></div>
+          </div>`;
+        });
       }
+      container.innerHTML = html;
+
+      // Навешиваем события на элементы превью
+      const items = container.querySelectorAll('.preview-item');
+      items.forEach(item => {
+        const idx = parseInt(item.dataset.index);
+        // Выделение по клику
+        item.addEventListener('mousedown', (e) => {
+          if (e.target.classList.contains('resize-handle')) return;
+          selectedIndex = idx;
+          renderPreview(); // перерисовка для выделения
+          startDrag(e, idx);
+        });
+
+        // Ручка изменения размера
+        const handle = item.querySelector('.resize-handle');
+        if (handle) {
+          handle.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            startResize(e, idx);
+          });
+        }
+      });
+
+      // Применяем фон
       const bg = getBgSettings();
-      bgColor.value = bg.color || '#1a1a2e';
-      bgImage.value = bg.image || '';
-      renderBlocksList();
+      container.style.background = bg.color || '#1a1a2e';
+      container.style.backgroundImage = bg.image ? 'url(' + bg.image + ')' : 'none';
+      container.style.backgroundSize = 'cover';
+      container.style.backgroundPosition = 'center';
     }
 
-    function resetProject() {
-      if (!confirm('Сбросить проект?')) return;
-      localStorage.removeItem(STORAGE_KEY);
-      blocks = [];
-      renderBlocksList();
-      autoSave();
+    // ===== ПЕРЕТАСКИВАНИЕ В ПРЕВЬЮ =====
+    function startDrag(e, idx) {
+      if (e.button !== 0) return;
+      const item = e.currentTarget;
+      const rect = item.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+
+      function onMove(ev) {
+        const container = document.getElementById('previewFrame');
+        const containerRect = container.getBoundingClientRect();
+        let newX = ev.clientX - containerRect.left - offsetX;
+        let newY = ev.clientY - containerRect.top - offsetY;
+        newX = Math.max(0, newX);
+        newY = Math.max(0, newY);
+        const maxW = containerRect.width - (blocks[idx].width || 100);
+        const maxH = containerRect.height - (blocks[idx].height || 60);
+        newX = Math.min(newX, maxW);
+        newY = Math.min(newY, maxH);
+        blocks[idx].x = newX;
+        blocks[idx].y = newY;
+        renderPreview();
+        autoSave();
+      }
+
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+
+    // ===== ИЗМЕНЕНИЕ РАЗМЕРА В ПРЕВЬЮ =====
+    function startResize(e, idx) {
+      e.preventDefault();
+      const item = e.currentTarget.parentElement;
+      const rect = item.getBoundingClientRect();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startW = rect.width;
+      const startH = rect.height;
+
+      function onMove(ev) {
+        let newW = startW + (ev.clientX - startX);
+        let newH = startH + (ev.clientY - startY);
+        newW = Math.max(50, newW);
+        newH = Math.max(30, newH);
+        const container = document.getElementById('previewFrame');
+        const containerRect = container.getBoundingClientRect();
+        newW = Math.min(newW, containerRect.width - blocks[idx].x);
+        newH = Math.min(newH, containerRect.height - blocks[idx].y);
+        blocks[idx].width = newW;
+        blocks[idx].height = newH;
+        renderPreview();
+        autoSave();
+      }
+
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      }
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
     }
 
     // ===== ЭКСПОРТ =====
@@ -493,15 +627,22 @@
       let content = '';
       blocks.forEach(b => {
         const d = escapeHtml(b.data || '');
-        if (b.type === 'header') content += '<h2>' + d + '</h2>';
-        else if (b.type === 'text') content += '<p>' + d.replace(/\n/g, '<br>') + '</p>';
-        else if (b.type === 'image') content += d ? '<img src="' + d + '" style="max-width:100%;">' : '';
+        let inner = '';
+        if (b.type === 'header') inner = '<h2>' + d + '</h2>';
+        else if (b.type === 'text') inner = '<p>' + d.replace(/\n/g, '<br>') + '</p>';
+        else if (b.type === 'image') inner = d ? '<img src="' + d + '" style="max-width:100%;">' : '';
         else if (b.type === 'button') {
           const url = b.url ? escapeHtml(b.url) : '#';
-          content += '<a href="' + url + '" style="display:inline-block;padding:10px 30px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">' + (d || 'Кнопка') + '</a>';
+          inner = '<a href="' + url + '" style="display:inline-block;padding:10px 30px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">' + (d || 'Кнопка') + '</a>';
         }
-        else content += '<div>' + d + '</div>';
+        else inner = '<div>' + d + '</div>';
+        const x = b.x || 20;
+        const y = b.y || 20;
+        const w = b.width || 200;
+        const h = b.height || 60;
+        content += `<div style="position:absolute; left:${x}px; top:${y}px; width:${w}px; height:${h}px; overflow:hidden;">${inner}</div>`;
       });
+
       let footer = '<div class="footer">Создано в DinoSiteX</div>';
       if (userPlan === 'free') {
         footer = `<div class="footer">Создано в <a href="${BASE_URL}" target="_blank" style="color:#f093fb;text-decoration:none;">DinoSiteX</a></div>`;
@@ -510,7 +651,8 @@
       let bgStyle = '';
       if (bg.image) bgStyle = `background-image: url('${bg.image}'); background-size: cover; background-position: center;`;
       else if (bg.color) bgStyle = `background-color: ${bg.color};`;
-      return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Мой сайт</title><style>body{font-family:'Segoe UI',sans-serif;max-width:800px;margin:40px auto;padding:0 20px;color:#eee;line-height:1.6;${bgStyle}}h2{color:#f093fb;margin:20px 0 10px;}p{margin:10px 0;}img{max-width:100%;border-radius:12px;margin:10px 0;}a{color:#667eea;}.footer{margin-top:40px;font-size:14px;color:#888;text-align:center;border-top:1px solid #222;padding-top:20px;}</style></head><body>${content}${footer}</body></html>`;
+
+      return `<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Мой сайт</title><style>body{font-family:'Segoe UI',sans-serif;margin:0;padding:0;min-height:100vh;color:#eee;line-height:1.6;${bgStyle}position:relative;overflow:hidden;}h2{color:#f093fb;margin:0 0 6px 0;}p{margin:0 0 8px 0;}img{max-width:100%;border-radius:12px;}a{color:#667eea;}.footer{position:fixed;bottom:20px;left:0;right:0;text-align:center;font-size:14px;color:#888;border-top:1px solid #222;padding-top:20px;}</style></head><body>${content}${footer}</body></html>`;
     }
 
     function showExportOverlay() {
@@ -534,7 +676,7 @@
       exportOverlay.classList.remove('active');
     }
 
-    // ===== FIRESTORE: ПЛАНЫ =====
+    // ===== FIRESTORE / AUTH =====
     async function loadUserPlan(uid) {
       try {
         const doc = await db.collection('users').doc(uid).get();
@@ -600,7 +742,7 @@
       try {
         await auth.signInWithEmailAndPassword(email, pass);
         authModal.classList.remove('active');
-        await checkGiftAfterLogin(); // проверим, есть ли токен
+        await checkGiftAfterLogin();
       } catch(e) { alert('Ошибка входа: ' + e.message); }
     }
 
@@ -609,9 +751,8 @@
       if (!email || !pass) return alert('Заполните поля');
       if (pass.length < 6) return alert('Пароль минимум 6 символов');
       try {
-        const cred = await auth.createUserWithEmailAndPassword(email, pass);
+        await auth.createUserWithEmailAndPassword(email, pass);
         authModal.classList.remove('active');
-        // После регистрации проверяем токен подарка
         await checkGiftAfterLogin();
       } catch(e) { alert('Ошибка регистрации: ' + e.message); }
     }
@@ -632,8 +773,8 @@
       const expiry = new Date(Date.now() + days * 86400000);
       try {
         await db.collection('gifts').doc(token).set({
-          days: days,
-          expiry: expiry,
+          days,
+          expiry,
           used: false,
           createdAt: new Date()
         });
@@ -646,7 +787,6 @@
     }
 
     async function checkGiftAfterLogin() {
-      // Проверяем, есть ли сохранённый токен
       const token = localStorage.getItem('gift_token');
       if (!token) return;
       if (!currentUser) return;
@@ -656,7 +796,6 @@
         const data = doc.data();
         if (data.used) { localStorage.removeItem('gift_token'); return; }
         if (data.expiry.toDate() < new Date()) { localStorage.removeItem('gift_token'); return; }
-        // Активируем PRO
         const newExpiry = new Date(Date.now() + data.days * 86400000);
         await db.collection('users').doc(currentUser.uid).set({
           plan: 'pro',
@@ -809,31 +948,13 @@
     grantProBtn.addEventListener('click', grantPro);
     createGiftBtn.addEventListener('click', createGiftLink);
 
-    // ===== ИНИЦИАЛИЗАЦИЯ =====
-    auth.onAuthStateChanged(async user => {
-      currentUser = user;
-      updateUI(user);
-      if (user) {
-        await loadUserPlan(user.uid);
-        await updateProfileUI();
-        // Проверим подарок после загрузки (если пользователь залогинен)
-        await checkGiftAfterLogin();
-      } else {
-        userPlan = 'free';
-        userExpiry = null;
-        currentUser = null;
-      }
-    });
-
-    // Проверяем параметр gift в URL при загрузке
+    // ===== ПРОВЕРКА ПОДАРКА В URL =====
     (function checkGiftParam() {
       const params = new URLSearchParams(window.location.search);
       const token = params.get('gift');
       if (token) {
         localStorage.setItem('gift_token', token);
-        // Удаляем параметр из URL, чтобы не мозолил глаза
         window.history.replaceState({}, document.title, window.location.pathname);
-        // Если пользователь уже залогинен, активируем сразу
         if (currentUser) {
           checkGiftAfterLogin();
         } else {
@@ -842,8 +963,23 @@
       }
     })();
 
+    // ===== ИНИЦИАЛИЗАЦИЯ =====
+    auth.onAuthStateChanged(async user => {
+      currentUser = user;
+      updateUI(user);
+      if (user) {
+        await loadUserPlan(user.uid);
+        await updateProfileUI();
+        await checkGiftAfterLogin();
+      } else {
+        userPlan = 'free';
+        userExpiry = null;
+        currentUser = null;
+      }
+    });
+
     loadFromStorage();
-    console.log('🦕 DinoSiteX с подарочными ссылками готов!');
+    console.log('🦕 DinoSiteX с превью-редактором готов!');
     console.log('Админ UID:', ADMIN_UID);
   </script>
 </body>
