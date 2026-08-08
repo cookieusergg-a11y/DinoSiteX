@@ -8,6 +8,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
+    /* ===== все стили как были (без изменений) ===== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0b0b1a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
     .app { max-width: 1400px; margin: 0 auto; padding: 20px 16px; width: 100%; flex: 1; display: flex; flex-direction: column; }
@@ -22,8 +23,6 @@
     .btn-success:hover { background: #27ae60; }
     .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.3); }
     .btn-outline:hover { background: rgba(255,255,255,0.1); }
-    .btn-danger { background: #e74c3c; color: #fff; border: none; }
-    .btn-danger:hover { background: #c0392b; }
     .btn-pro { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; border: none; }
     .btn-pro:hover { transform: scale(1.05); }
     .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; }
@@ -156,7 +155,7 @@
         <button class="btn btn-primary" id="publishBtn" style="align-self: flex-end;">🚀 Опубликовать</button>
       </section>
     </div>
-    <footer class="footer">© 2026 DinoSiteX — конструктор с превью-редактором</footer>
+    <footer class="footer">© 2026 DinoSiteX — конструктор без оплаты</footer>
   </div>
 
   <!-- Модалка профиля -->
@@ -522,19 +521,15 @@
       }
       container.innerHTML = html;
 
-      // Навешиваем события на элементы превью
       const items = container.querySelectorAll('.preview-item');
       items.forEach(item => {
         const idx = parseInt(item.dataset.index);
-        // Выделение по клику
         item.addEventListener('mousedown', (e) => {
           if (e.target.classList.contains('resize-handle')) return;
           selectedIndex = idx;
-          renderPreview(); // перерисовка для выделения
+          renderPreview();
           startDrag(e, idx);
         });
-
-        // Ручка изменения размера
         const handle = item.querySelector('.resize-handle');
         if (handle) {
           handle.addEventListener('mousedown', (e) => {
@@ -545,7 +540,6 @@
         }
       });
 
-      // Применяем фон
       const bg = getBgSettings();
       container.style.background = bg.color || '#1a1a2e';
       container.style.backgroundImage = bg.image ? 'url(' + bg.image + ')' : 'none';
@@ -553,7 +547,6 @@
       container.style.backgroundPosition = 'center';
     }
 
-    // ===== ПЕРЕТАСКИВАНИЕ В ПРЕВЬЮ =====
     function startDrag(e, idx) {
       if (e.button !== 0) return;
       const item = e.currentTarget;
@@ -587,7 +580,6 @@
       document.addEventListener('mouseup', onUp);
     }
 
-    // ===== ИЗМЕНЕНИЕ РАЗМЕРА В ПРЕВЬЮ =====
     function startResize(e, idx) {
       e.preventDefault();
       const item = e.currentTarget.parentElement;
@@ -736,6 +728,12 @@
       }
     }
 
+    // ===== ОПЛАТА (заглушка) =====
+    function buyProStub() {
+      alert('💎 Оплата временно недоступна. Обратитесь к администратору.');
+    }
+
+    // ===== АУТЕНТИФИКАЦИЯ =====
     async function authLogin() {
       const email = authEmail.value.trim(), pass = authPassword.value.trim();
       if (!email || !pass) return alert('Заполните поля');
@@ -758,7 +756,6 @@
     }
 
     function logout() { auth.signOut(); profileModal.classList.remove('active'); }
-    function buyPro() { alert('💎 Свяжитесь с поддержкой для покупки PRO'); }
 
     // ===== ПОДАРОЧНЫЕ ССЫЛКИ =====
     function generateToken() {
@@ -904,7 +901,7 @@
     closeProfileBtn.addEventListener('click', () => profileModal.classList.remove('active'));
     profileModal.addEventListener('click', e => { if (e.target === profileModal) profileModal.classList.remove('active'); });
     logoutBtn.addEventListener('click', logout);
-    buyProBtn.addEventListener('click', buyPro);
+    buyProBtn.addEventListener('click', buyProStub); // заглушка
 
     authBtn.addEventListener('click', () => {
       if (currentUser) profileBtn.click();
@@ -979,7 +976,7 @@
     });
 
     loadFromStorage();
-    console.log('🦕 DinoSiteX с превью-редактором готов!');
+    console.log('🦕 DinoSiteX готов (без оплаты)');
     console.log('Админ UID:', ADMIN_UID);
   </script>
 </body>
