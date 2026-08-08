@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
   <title>DinoSiteX — конструктор сайтов</title>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
     /* ===== RESET & БАЗА ===== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +32,7 @@
       flex-direction: column;
     }
 
-    /* ===== ШАПКА С ЛОГОТИПОМ ===== */
+    /* ===== ШАПКА ===== */
     .header {
       display: flex;
       justify-content: space-between;
@@ -49,11 +53,13 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      cursor: pointer;
     }
     .logo span { font-size: 34px; -webkit-text-fill-color: initial; }
     .header-actions {
       display: flex;
       gap: 12px;
+      align-items: center;
       flex-wrap: wrap;
     }
     .btn {
@@ -82,17 +88,17 @@
       border: none;
     }
     .btn-success:hover { background: #27ae60; transform: scale(1.03); }
-    .btn-danger {
-      background: #e74c3c;
-      color: #fff;
-      border: none;
-    }
-    .btn-danger:hover { background: #c0392b; }
     .btn-outline {
       background: transparent;
       border: 1px solid rgba(255,255,255,0.3);
     }
     .btn-outline:hover { background: rgba(255,255,255,0.1); }
+    .btn-pro {
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      color: #fff;
+      border: none;
+    }
+    .btn-pro:hover { transform: scale(1.05); }
 
     /* ===== ОСНОВНАЯ СЕТКА ===== */
     .main-grid {
@@ -122,35 +128,6 @@
       color: rgba(255,255,255,0.7);
       letter-spacing: 0.5px;
     }
-    .subdomain-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      background: rgba(0,0,0,0.3);
-      padding: 12px 16px;
-      border-radius: 16px;
-    }
-    .subdomain-row label { color: rgba(255,255,255,0.6); font-weight: 500; }
-    .subdomain-row input {
-      flex: 1;
-      min-width: 120px;
-      background: transparent;
-      border: none;
-      border-bottom: 2px solid rgba(255,255,255,0.2);
-      color: #fff;
-      font-size: 18px;
-      padding: 4px 0;
-      outline: none;
-      transition: border 0.2s;
-    }
-    .subdomain-row input:focus { border-bottom-color: #667eea; }
-    .subdomain-row .domain-suffix {
-      color: rgba(255,255,255,0.4);
-      font-size: 16px;
-      white-space: nowrap;
-    }
-
     .block-toolbar {
       display: flex;
       flex-wrap: wrap;
@@ -301,364 +278,648 @@
       color: rgba(255,255,255,0.25);
     }
 
+    /* ===== МОДАЛКИ ===== */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(8px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .modal.active { display: flex; }
+    .modal-content {
+      max-width: 500px;
+      width: 100%;
+      background: #1a1a2e;
+      border-radius: 24px;
+      padding: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    }
+    .modal-content h2 {
+      margin-top: 0;
+      font-size: 26px;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .modal-content .field {
+      margin: 16px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255,255,255,0.05);
+      padding: 12px 16px;
+      border-radius: 12px;
+    }
+    .modal-content .field label {
+      color: rgba(255,255,255,0.5);
+      font-weight: 500;
+    }
+    .modal-content .field .value {
+      color: #fff;
+      font-weight: 600;
+    }
+    .modal-content .btn-close-modal {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+      cursor: pointer;
+      margin-top: 20px;
+      text-decoration: underline;
+    }
+    .modal-content .btn-close-modal:hover { color: #fff; }
+    .plan-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 30px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .plan-free { background: #e74c3c; color: #fff; }
+    .plan-pro { background: #2ecc71; color: #0b0b1a; }
+
+    /* ===== ОВЕРЛЕЙ ЭКСПОРТА ===== */
+    .export-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(12px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 9998;
+      padding: 20px;
+    }
+    .export-overlay.active { display: flex; }
+    .export-content {
+      max-width: 700px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 32px;
+      padding: 40px 36px;
+      border: 1px solid rgba(255,255,255,0.12);
+      text-align: center;
+      width: 100%;
+    }
+    .export-content h2 {
+      font-size: 32px;
+      margin-top: 0;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .export-content .big-icon { font-size: 64px; display: block; margin-bottom: 10px; }
+    .export-content .info-text {
+      background: rgba(0,0,0,0.3);
+      padding: 16px;
+      border-radius: 16px;
+      margin: 16px 0;
+      color: #ccc;
+      line-height: 1.6;
+    }
+    .export-content .btn-download {
+      display: inline-block;
+      padding: 16px 50px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 700;
+      border: none;
+      border-radius: 60px;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 10px;
+    }
+    .export-content .btn-download:hover { transform: scale(1.05); }
+    .export-content .btn-close-export {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      font-size: 16px;
+      margin-top: 20px;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+    .export-content .btn-close-export:hover { color: #fff; }
+
     /* ===== АДАПТИВ ===== */
     @media (max-width: 600px) {
       .logo { font-size: 22px; }
       .header { flex-direction: column; align-items: stretch; }
       .header-actions { justify-content: center; }
-      .subdomain-row input { font-size: 16px; }
       .block-toolbar .btn { flex: 1; font-size: 12px; padding: 6px 12px; }
       .preview-frame { min-height: 250px; }
+      .modal-content, .export-content { padding: 20px; }
     }
   </style>
 </head>
 <body>
-  <div class="app" id="app">
+  <div class="app">
     <!-- Шапка -->
     <header class="header">
-      <div class="logo">
+      <div class="logo" onclick="location.reload()">
         <span>🦕</span> DinoSiteX
       </div>
       <div class="header-actions">
         <button class="btn btn-outline" id="resetBtn">Сбросить</button>
         <button class="btn btn-success" id="exportBtn">📥 Скачать сайт</button>
+        <button class="btn btn-primary" id="profileBtn">👤 Профиль</button>
+        <button class="btn btn-outline" id="authBtn">Войти</button>
       </div>
     </header>
 
     <!-- Основная сетка -->
     <div class="main-grid">
-      <!-- ЛЕВАЯ ПАНЕЛЬ: редактор -->
       <section class="editor-panel">
         <h2 class="panel-title">✏️ Редактор</h2>
-
-        <!-- Поддомен -->
-        <div class="subdomain-row">
-          <label>Поддомен:</label>
-          <input type="text" id="subdomainInput" placeholder="мойпроект" value="мойсайт">
-          <span class="domain-suffix">.DinoSiteX.ваш-домен</span>
-        </div>
-
-        <!-- Панель добавления блоков -->
         <div class="block-toolbar">
           <button class="btn" data-block="header">➕ Заголовок</button>
           <button class="btn" data-block="text">➕ Текст</button>
           <button class="btn" data-block="image">➕ Картинка</button>
           <button class="btn" data-block="button">➕ Кнопка</button>
         </div>
-
-        <!-- Список блоков -->
         <div class="blocks-list" id="blocksList"></div>
-
         <div style="margin-top: auto; display: flex; gap: 12px; flex-wrap: wrap;">
-          <button class="btn btn-primary" id="saveBtn" style="flex:1;">💾 Сохранить проект</button>
+          <button class="btn btn-primary" id="saveBtn" style="flex:1;">💾 Сохранить</button>
           <button class="btn btn-outline" id="clearBlocksBtn" style="flex:0.5;">Очистить</button>
         </div>
       </section>
 
-      <!-- ПРАВАЯ ПАНЕЛЬ: превью -->
       <section class="preview-panel">
         <div class="preview-header">
           <span class="panel-title">👁️ Превью</span>
-          <span class="preview-url" id="previewUrl">мойсайт.DinoSiteX.ваш-домен</span>
+          <span class="preview-url">Ваш сайт</span>
         </div>
         <div class="preview-frame" id="previewFrame">
           <div class="site-preview" id="sitePreview">
-            <div class="empty-preview">Добавьте блоки слева, чтобы увидеть сайт</div>
+            <div class="empty-preview">Добавьте блоки слева</div>
           </div>
         </div>
-        <button class="btn btn-primary" id="publishBtn" style="align-self: flex-end;">🚀 Опубликовать (скачать HTML)</button>
+        <button class="btn btn-primary" id="publishBtn" style="align-self: flex-end;">🚀 Опубликовать</button>
       </section>
     </div>
+    <footer class="footer">© 2026 DinoSiteX — конструктор с аккаунтами</footer>
+  </div>
 
-    <footer class="footer">© 2026 DinoSiteX — конструктор без сервера. Все данные локально.</footer>
+  <!-- Модалка профиля -->
+  <div class="modal" id="profileModal">
+    <div class="modal-content">
+      <h2>👤 Профиль</h2>
+      <div class="field"><label>UID</label><span class="value" id="profileUid">—</span></div>
+      <div class="field"><label>План</label><span class="value" id="profilePlan"><span class="plan-badge plan-free">Free</span></span></div>
+      <div class="field" id="proButtonContainer">
+        <button class="btn btn-pro" id="buyProBtn">💎 Купить PRO</button>
+      </div>
+      <button class="btn btn-outline" id="logoutBtn" style="width:100%;margin:10px 0;">Выйти</button>
+      <button class="btn-close-modal" id="closeProfileBtn">✕ Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Модалка входа -->
+  <div class="modal" id="authModal">
+    <div class="modal-content">
+      <h2>🔐 Вход / Регистрация</h2>
+      <input type="email" id="authEmail" placeholder="Email" style="width:100%;padding:12px;border-radius:12px;background:#0b0b1a;border:1px solid #333;color:#fff;margin:10px 0;">
+      <input type="password" id="authPassword" placeholder="Пароль" style="width:100%;padding:12px;border-radius:12px;background:#0b0b1a;border:1px solid #333;color:#fff;margin:10px 0;">
+      <button class="btn btn-primary" id="authLoginBtn" style="width:100%;">Войти</button>
+      <button class="btn btn-outline" id="authRegisterBtn" style="width:100%;margin-top:8px;">Зарегистрироваться</button>
+      <button class="btn-close-modal" id="closeAuthBtn">✕ Закрыть</button>
+    </div>
+  </div>
+
+  <!-- Оверлей экспорта (скачивание) -->
+  <div class="export-overlay" id="exportOverlay">
+    <div class="export-content">
+      <span class="big-icon">🦕</span>
+      <h2>Готово к скачиванию!</h2>
+      <div class="info-text" id="exportInfo">
+        Ваш сайт будет скачан в виде HTML-файла.
+        <br><span id="watermarkInfo"></span>
+      </div>
+      <button class="btn-download" id="downloadFinalBtn">📥 СКАЧАТЬ</button>
+      <br>
+      <button class="btn-close-export" id="closeExportBtn">✕ Закрыть</button>
+    </div>
   </div>
 
   <script>
-    (function() {
-      'use strict';
+    // ============================================================
+    // 1. НАСТРОЙКА FIREBASE (вставь свои данные)
+    // ============================================================
+    const firebaseConfig = {
+      apiKey: "ТВОЙ_API_KEY",
+      authDomain: "ТВОЙ_AUTH_DOMAIN",
+      projectId: "ТВОЙ_PROJECT_ID",
+      storageBucket: "ТВОЙ_STORAGE_BUCKET",
+      messagingSenderId: "ТВОЙ_SENDER_ID",
+      appId: "ТВОЙ_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-      // ===== СОСТОЯНИЕ =====
-      let blocks = [];            // массив { type, data }
-      let subdomain = 'мойсайт';
-      const STORAGE_KEY = 'dinositex_blocks';
-      const SUB_KEY = 'dinositex_subdomain';
+    // ============================================================
+    // 2. НАСТРОЙКА АДМИНА (вставь UID админа)
+    // ============================================================
+    const ADMIN_UID = "ЗДЕСЬ_UID_АДМИНА"; // например, "abc123..."
+    const BASE_URL = "https://dinositex.ваш-домен"; // ссылка на главную конструктора
 
-      // ===== DOM-ссылки =====
-      const blocksList = document.getElementById('blocksList');
-      const previewFrame = document.getElementById('sitePreview');
-      const previewUrl = document.getElementById('previewUrl');
-      const subInput = document.getElementById('subdomainInput');
-      const exportBtn = document.getElementById('exportBtn');
-      const publishBtn = document.getElementById('publishBtn');
-      const saveBtn = document.getElementById('saveBtn');
-      const resetBtn = document.getElementById('resetBtn');
-      const clearBlocksBtn = document.getElementById('clearBlocksBtn');
+    // ============================================================
+    // 3. СОСТОЯНИЕ
+    // ============================================================
+    let blocks = [];
+    const STORAGE_KEY = 'dinositex_blocks';
+    let currentUser = null;        // firebase user
+    let userPlan = 'free';         // 'free' или 'pro'
 
-      // ===== ФУНКЦИИ РЕНДЕРИНГА =====
+    // ============================================================
+    // 4. DOM-элементы
+    // ============================================================
+    const blocksList = document.getElementById('blocksList');
+    const previewFrame = document.getElementById('sitePreview');
+    const exportBtn = document.getElementById('exportBtn');
+    const publishBtn = document.getElementById('publishBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const clearBlocksBtn = document.getElementById('clearBlocksBtn');
+    const profileBtn = document.getElementById('profileBtn');
+    const authBtn = document.getElementById('authBtn');
+    const profileModal = document.getElementById('profileModal');
+    const authModal = document.getElementById('authModal');
+    const exportOverlay = document.getElementById('exportOverlay');
+    const profileUid = document.getElementById('profileUid');
+    const profilePlan = document.getElementById('profilePlan');
+    const buyProBtn = document.getElementById('buyProBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const closeProfileBtn = document.getElementById('closeProfileBtn');
+    const closeAuthBtn = document.getElementById('closeAuthBtn');
+    const closeExportBtn = document.getElementById('closeExportBtn');
+    const downloadFinalBtn = document.getElementById('downloadFinalBtn');
+    const authLoginBtn = document.getElementById('authLoginBtn');
+    const authRegisterBtn = document.getElementById('authRegisterBtn');
+    const authEmail = document.getElementById('authEmail');
+    const authPassword = document.getElementById('authPassword');
+    const exportInfo = document.getElementById('exportInfo');
+    const watermarkInfo = document.getElementById('watermarkInfo');
 
-      // Обновить превью
-      function renderPreview() {
-        let html = '';
-        if (blocks.length === 0) {
-          html = `<div class="empty-preview">Добавьте блоки слева, чтобы увидеть сайт</div>`;
-        } else {
-          blocks.forEach(block => {
-            const data = block.data || '';
-            switch (block.type) {
-              case 'header':
-                html += `<h2>${escapeHtml(data)}</h2>`;
-                break;
-              case 'text':
-                html += `<p>${escapeHtml(data).replace(/\n/g, '<br>')}</p>`;
-                break;
-              case 'image':
-                html += data ? `<img src="${escapeHtml(data)}" alt="image">` : '<p style="color:gray;">[картинка]</p>';
-                break;
-              case 'button':
-                html += `<a class="btn-preview" style="display:inline-block;padding:8px 24px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">${escapeHtml(data) || 'Кнопка'}</a>`;
-                break;
-              default: html += `<div>${escapeHtml(data)}</div>`;
-            }
-          });
-        }
-        previewFrame.innerHTML = html;
+    // ============================================================
+    // 5. ФУНКЦИИ РЕНДЕРИНГА БЛОКОВ
+    // ============================================================
+    function escapeHtml(text) {
+      if (!text) return '';
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return text.replace(/[&<>"']/g, m => map[m]);
+    }
 
-        // Обновить URL превью
-        const sub = subdomain.trim() || 'проект';
-        previewUrl.textContent = `${sub}.DinoSiteX.ваш-домен`;
-      }
-
-      // Экранирование HTML
-      function escapeHtml(text) {
-        if (!text) return '';
-        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
-        return text.replace(/[&<>"']/g, m => map[m]);
-      }
-
-      // Рендеринг списка блоков (с редактированием)
-      function renderBlocksList() {
-        blocksList.innerHTML = '';
-        blocks.forEach((block, index) => {
-          const div = document.createElement('div');
-          div.className = 'block-item';
-          div.dataset.index = index;
-
-          // Заголовок блока
-          const header = document.createElement('div');
-          header.className = 'block-header';
-          const typeLabel = document.createElement('span');
-          typeLabel.className = 'block-type';
-          const typeNames = { header: 'Заголовок', text: 'Текст', image: 'Картинка', button: 'Кнопка' };
-          typeLabel.textContent = typeNames[block.type] || block.type;
-
-          const actions = document.createElement('div');
-          actions.className = 'block-actions';
-          const upBtn = document.createElement('button');
-          upBtn.textContent = '↑';
-          upBtn.title = 'Вверх';
-          upBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            moveBlock(index, -1);
-          });
-          const downBtn = document.createElement('button');
-          downBtn.textContent = '↓';
-          downBtn.title = 'Вниз';
-          downBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            moveBlock(index, 1);
-          });
-          const delBtn = document.createElement('button');
-          delBtn.textContent = '✕';
-          delBtn.className = 'del';
-          delBtn.title = 'Удалить';
-          delBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteBlock(index);
-          });
-          actions.append(upBtn, downBtn, delBtn);
-          header.append(typeLabel, actions);
-          div.appendChild(header);
-
-          // Редактируемое поле
-          let input;
-          if (block.type === 'text') {
-            input = document.createElement('textarea');
-            input.placeholder = 'Введите текст...';
-            input.value = block.data || '';
-            input.addEventListener('input', () => {
-              blocks[index].data = input.value;
-              renderPreview();
-              autoSave();
-            });
-          } else {
-            input = document.createElement('input');
-            input.placeholder = block.type === 'image' ? 'URL картинки...' : block.type === 'button' ? 'Текст кнопки...' : 'Введите заголовок...';
-            input.value = block.data || '';
-            input.addEventListener('input', () => {
-              blocks[index].data = input.value;
-              renderPreview();
-              autoSave();
-            });
-          }
-          div.appendChild(input);
-
-          blocksList.appendChild(div);
-        });
-        renderPreview();
-      }
-
-      // ===== ОПЕРАЦИИ С БЛОКАМИ =====
-      function addBlock(type) {
-        blocks.push({ type, data: '' });
-        renderBlocksList();
-        autoSave();
-      }
-
-      function deleteBlock(index) {
-        blocks.splice(index, 1);
-        renderBlocksList();
-        autoSave();
-      }
-
-      function moveBlock(index, direction) {
-        const newIndex = index + direction;
-        if (newIndex < 0 || newIndex >= blocks.length) return;
-        [blocks[index], blocks[newIndex]] = [blocks[newIndex], blocks[index]];
-        renderBlocksList();
-        autoSave();
-      }
-
-      function clearBlocks() {
-        if (blocks.length === 0) return;
-        if (confirm('Удалить все блоки?')) {
-          blocks = [];
-          renderBlocksList();
-          autoSave();
-        }
-      }
-
-      // ===== СОХРАНЕНИЕ / ЗАГРУЗКА =====
-      function autoSave() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
-        localStorage.setItem(SUB_KEY, subdomain);
-      }
-
-      function loadFromStorage() {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved);
-            if (Array.isArray(parsed)) blocks = parsed;
-          } catch(e) {}
-        }
-        const savedSub = localStorage.getItem(SUB_KEY);
-        if (savedSub) subdomain = savedSub;
-        subInput.value = subdomain;
-        renderBlocksList();
-      }
-
-      function resetProject() {
-        if (!confirm('Сбросить проект? Все несохранённые изменения будут потеряны.')) return;
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem(SUB_KEY);
-        blocks = [];
-        subdomain = 'мойсайт';
-        subInput.value = subdomain;
-        renderBlocksList();
-        autoSave();
-      }
-
-      // ===== ЭКСПОРТ (скачать HTML) =====
-      function exportSite() {
-        if (blocks.length === 0) {
-          alert('Добавьте хотя бы один блок, чтобы экспортировать сайт.');
-          return;
-        }
-        const sub = subdomain.trim() || 'проект';
-        // Строим HTML контент
-        let contentHtml = '';
+    function renderPreview() {
+      let html = '';
+      if (blocks.length === 0) {
+        html = '<div class="empty-preview">Добавьте блоки слева</div>';
+      } else {
         blocks.forEach(block => {
-          const data = escapeHtml(block.data || '');
+          const data = block.data || '';
           switch (block.type) {
-            case 'header': contentHtml += `<h2>${data}</h2>`; break;
-            case 'text': contentHtml += `<p>${data.replace(/\n/g, '<br>')}</p>`; break;
-            case 'image': contentHtml += data ? `<img src="${data}" alt="image" style="max-width:100%;">` : ''; break;
-            case 'button': contentHtml += `<a href="#" style="display:inline-block;padding:10px 30px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">${data || 'Кнопка'}</a>`; break;
-            default: contentHtml += `<div>${data}</div>`;
+            case 'header': html += '<h2>' + escapeHtml(data) + '</h2>'; break;
+            case 'text': html += '<p>' + escapeHtml(data).replace(/\n/g, '<br>') + '</p>'; break;
+            case 'image': html += data ? '<img src="' + escapeHtml(data) + '" alt="image">' : '<p style="color:gray;">[картинка]</p>'; break;
+            case 'button': html += '<a class="btn-preview" style="display:inline-block;padding:8px 24px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">' + (escapeHtml(data) || 'Кнопка') + '</a>'; break;
+            default: html += '<div>' + escapeHtml(data) + '</div>';
           }
         });
+      }
+      previewFrame.innerHTML = html;
+    }
 
-        const fullHtml = `<!DOCTYPE html>
+    function renderBlocksList() {
+      blocksList.innerHTML = '';
+      blocks.forEach((block, index) => {
+        const div = document.createElement('div');
+        div.className = 'block-item';
+        const header = document.createElement('div');
+        header.className = 'block-header';
+        const typeLabel = document.createElement('span');
+        typeLabel.className = 'block-type';
+        const typeNames = { header: 'Заголовок', text: 'Текст', image: 'Картинка', button: 'Кнопка' };
+        typeLabel.textContent = typeNames[block.type] || block.type;
+        const actions = document.createElement('div');
+        actions.className = 'block-actions';
+        const upBtn = document.createElement('button');
+        upBtn.textContent = '↑';
+        upBtn.addEventListener('click', e => { e.stopPropagation(); moveBlock(index, -1); });
+        const downBtn = document.createElement('button');
+        downBtn.textContent = '↓';
+        downBtn.addEventListener('click', e => { e.stopPropagation(); moveBlock(index, 1); });
+        const delBtn = document.createElement('button');
+        delBtn.textContent = '✕';
+        delBtn.className = 'del';
+        delBtn.addEventListener('click', e => { e.stopPropagation(); deleteBlock(index); });
+        actions.append(upBtn, downBtn, delBtn);
+        header.append(typeLabel, actions);
+        div.appendChild(header);
+
+        let input;
+        if (block.type === 'text') {
+          input = document.createElement('textarea');
+          input.placeholder = 'Введите текст...';
+          input.value = block.data || '';
+          input.addEventListener('input', () => { blocks[index].data = input.value; renderPreview(); autoSave(); });
+        } else {
+          input = document.createElement('input');
+          input.placeholder = block.type === 'image' ? 'URL картинки...' : block.type === 'button' ? 'Текст кнопки...' : 'Введите заголовок...';
+          input.value = block.data || '';
+          input.addEventListener('input', () => { blocks[index].data = input.value; renderPreview(); autoSave(); });
+        }
+        div.appendChild(input);
+        blocksList.appendChild(div);
+      });
+      renderPreview();
+    }
+
+    function addBlock(type) {
+      blocks.push({ type, data: '' });
+      renderBlocksList();
+      autoSave();
+    }
+    function deleteBlock(index) {
+      blocks.splice(index, 1);
+      renderBlocksList();
+      autoSave();
+    }
+    function moveBlock(index, direction) {
+      const newIndex = index + direction;
+      if (newIndex < 0 || newIndex >= blocks.length) return;
+      [blocks[index], blocks[newIndex]] = [blocks[newIndex], blocks[index]];
+      renderBlocksList();
+      autoSave();
+    }
+    function clearBlocks() {
+      if (blocks.length === 0) return;
+      if (confirm('Удалить все блоки?')) { blocks = []; renderBlocksList(); autoSave(); }
+    }
+    function autoSave() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
+    }
+    function loadFromStorage() {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) blocks = parsed; } catch(e) {}
+      }
+      renderBlocksList();
+    }
+    function resetProject() {
+      if (!confirm('Сбросить проект?')) return;
+      localStorage.removeItem(STORAGE_KEY);
+      blocks = [];
+      renderBlocksList();
+      autoSave();
+    }
+
+    // ============================================================
+    // 6. ГЕНЕРАЦИЯ HTML САЙТА С ВОДЯНЫМ ЗНАКОМ
+    // ============================================================
+    function generateSiteHTML() {
+      if (blocks.length === 0) {
+        alert('Добавьте хотя бы один блок.');
+        return null;
+      }
+      let contentHtml = '';
+      blocks.forEach(block => {
+        const data = escapeHtml(block.data || '');
+        switch (block.type) {
+          case 'header': contentHtml += '<h2>' + data + '</h2>'; break;
+          case 'text': contentHtml += '<p>' + data.replace(/\n/g, '<br>') + '</p>'; break;
+          case 'image': contentHtml += data ? '<img src="' + data + '" alt="image" style="max-width:100%;">' : ''; break;
+          case 'button': contentHtml += '<a href="#" style="display:inline-block;padding:10px 30px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">' + (data || 'Кнопка') + '</a>'; break;
+          default: contentHtml += '<div>' + data + '</div>';
+        }
+      });
+
+      let footer = '<div class="footer">Создано в DinoSiteX</div>';
+      // Если план free — добавляем водяной знак с ссылкой
+      if (userPlan === 'free') {
+        footer = `<div class="footer">Создано в <a href="${BASE_URL}" target="_blank" style="color:#f093fb;text-decoration:none;">DinoSiteX</a></div>`;
+      }
+
+      return `<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${sub} — DinoSiteX</title>
+  <title>Мой сайт — DinoSiteX</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #0b0b1a; color: #eee; line-height: 1.6; }
     h2 { color: #f093fb; margin: 20px 0 10px; }
     p { margin: 10px 0; }
     img { max-width: 100%; border-radius: 12px; margin: 10px 0; }
     a { color: #667eea; }
-    .footer { margin-top: 40px; font-size: 14px; color: #444; text-align: center; border-top: 1px solid #222; padding-top: 20px; }
+    .footer { margin-top: 40px; font-size: 14px; color: #888; text-align: center; border-top: 1px solid #222; padding-top: 20px; }
   </style>
 </head>
 <body>
   ${contentHtml}
-  <div class="footer">Создано в DinoSiteX • ${sub}.DinoSiteX.ваш-домен</div>
+  ${footer}
 </body>
 </html>`;
+    }
 
-        const blob = new Blob([fullHtml], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${sub}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+    // ============================================================
+    // 7. ЭКСПОРТ / СКАЧИВАНИЕ
+    // ============================================================
+    function showExportOverlay() {
+      if (blocks.length === 0) {
+        alert('Добавьте хотя бы один блок.');
+        return;
       }
+      // Показываем информацию о водяном знаке
+      const watermarkMsg = userPlan === 'free' 
+        ? '⚠️ Бесплатный план — внизу страницы будет водяной знак со ссылкой на DinoSiteX.' 
+        : '✅ PRO план — водяного знака нет.';
+      watermarkInfo.textContent = watermarkMsg;
+      exportOverlay.classList.add('active');
+    }
 
-      // ===== СОБЫТИЯ =====
+    function downloadSite() {
+      const html = generateSiteHTML();
+      if (!html) return;
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'сайт.html';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      exportOverlay.classList.remove('active');
+    }
 
-      // Добавление блоков по кнопкам
-      document.querySelectorAll('[data-block]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          addBlock(btn.dataset.block);
-        });
-      });
+    // ============================================================
+    // 8. AUTH / ПОЛЬЗОВАТЕЛИ
+    // ============================================================
+    function updateUI(user) {
+      if (user) {
+        authBtn.textContent = user.email || 'Аккаунт';
+        authBtn.style.borderColor = '#2ecc71';
+        profileBtn.style.display = 'inline-block';
+      } else {
+        authBtn.textContent = 'Войти';
+        authBtn.style.borderColor = 'rgba(255,255,255,0.3)';
+        profileBtn.style.display = 'none';
+      }
+    }
 
-      // Поддомен
-      subInput.addEventListener('input', () => {
-        subdomain = subInput.value.trim() || 'проект';
-        autoSave();
-        renderPreview();
-      });
+    async function loadUserPlan(uid) {
+      try {
+        const doc = await db.collection('users').doc(uid).get();
+        if (doc.exists) {
+          const data = doc.data();
+          userPlan = data.plan || 'free';
+        } else {
+          // Создаём документ с планом free
+          await db.collection('users').doc(uid).set({ plan: 'free' });
+          userPlan = 'free';
+        }
+        // Админ — всегда pro
+        if (uid === ADMIN_UID) {
+          userPlan = 'pro';
+          await db.collection('users').doc(uid).set({ plan: 'pro' }, { merge: true });
+        }
+      } catch (e) {
+        console.error('Ошибка загрузки плана:', e);
+        userPlan = 'free';
+      }
+    }
 
-      // Сохранить (вручную)
-      saveBtn.addEventListener('click', () => {
-        autoSave();
-        alert('Проект сохранён в localStorage!');
-      });
+    async function updateProfileUI() {
+      if (currentUser) {
+        profileUid.textContent = currentUser.uid;
+        if (userPlan === 'pro') {
+          profilePlan.innerHTML = '<span class="plan-badge plan-pro">PRO</span>';
+        } else {
+          profilePlan.innerHTML = '<span class="plan-badge plan-free">Free</span>';
+        }
+        // Кнопка покупки видна только если free
+        document.getElementById('proButtonContainer').style.display = (userPlan === 'free') ? 'block' : 'none';
+      }
+    }
 
-      // Экспорт (скачать)
-      exportBtn.addEventListener('click', exportSite);
-      publishBtn.addEventListener('click', exportSite);
+    // Вход / регистрация
+    async function authLogin() {
+      const email = authEmail.value.trim();
+      const pass = authPassword.value.trim();
+      if (!email || !pass) return alert('Заполните поля');
+      try {
+        await auth.signInWithEmailAndPassword(email, pass);
+        authModal.classList.remove('active');
+      } catch (e) {
+        alert('Ошибка входа: ' + e.message);
+      }
+    }
 
-      // Сброс
-      resetBtn.addEventListener('click', resetProject);
+    async function authRegister() {
+      const email = authEmail.value.trim();
+      const pass = authPassword.value.trim();
+      if (!email || !pass) return alert('Заполните поля');
+      if (pass.length < 6) return alert('Пароль минимум 6 символов');
+      try {
+        await auth.createUserWithEmailAndPassword(email, pass);
+        authModal.classList.remove('active');
+      } catch (e) {
+        alert('Ошибка регистрации: ' + e.message);
+      }
+    }
 
-      // Очистить блоки
-      clearBlocksBtn.addEventListener('click', clearBlocks);
+    async function logout() {
+      await auth.signOut();
+      profileModal.classList.remove('active');
+    }
 
-      // ===== ИНИЦИАЛИЗАЦИЯ =====
-      loadFromStorage();
+    // Купить PRO (заглушка)
+    function buyPro() {
+      alert('💎 Свяжитесь с поддержкой для покупки PRO. Или вставьте сюда ссылку на платеж.');
+      // Здесь можно открыть внешнюю страницу оплаты
+    }
 
-      // Поддержка ввода через Enter в полях — не требуется
+    // ============================================================
+    // 9. ИНИЦИАЛИЗАЦИЯ
+    // ============================================================
+    auth.onAuthStateChanged(async user => {
+      currentUser = user;
+      updateUI(user);
+      if (user) {
+        await loadUserPlan(user.uid);
+        await updateProfileUI();
+      } else {
+        userPlan = 'free';
+        currentUser = null;
+      }
+      // Если пользователь не залогинен, но в localStorage есть блоки — они сохраняются.
+      // Можно разрешить редактировать без логина, но для экспорта будет водяной знак.
+      // Мы уже используем userPlan, если null — считаем free.
+    });
 
-      console.log('🦕 DinoSiteX готов к работе!');
-    })();
+    // ============================================================
+    // 10. СОБЫТИЯ
+    // ============================================================
+    // Блоки
+    document.querySelectorAll('[data-block]').forEach(btn => {
+      btn.addEventListener('click', () => addBlock(btn.dataset.block));
+    });
+
+    exportBtn.addEventListener('click', showExportOverlay);
+    publishBtn.addEventListener('click', showExportOverlay);
+    downloadFinalBtn.addEventListener('click', downloadSite);
+    closeExportBtn.addEventListener('click', () => exportOverlay.classList.remove('active'));
+    exportOverlay.addEventListener('click', e => { if (e.target === exportOverlay) exportOverlay.classList.remove('active'); });
+
+    saveBtn.addEventListener('click', () => { autoSave(); alert('Сохранено!'); });
+    resetBtn.addEventListener('click', resetProject);
+    clearBlocksBtn.addEventListener('click', clearBlocks);
+
+    // Профиль
+    profileBtn.addEventListener('click', () => {
+      if (!currentUser) { alert('Войдите в аккаунт'); return; }
+      updateProfileUI();
+      profileModal.classList.add('active');
+    });
+    closeProfileBtn.addEventListener('click', () => profileModal.classList.remove('active'));
+    profileModal.addEventListener('click', e => { if (e.target === profileModal) profileModal.classList.remove('active'); });
+    logoutBtn.addEventListener('click', logout);
+    buyProBtn.addEventListener('click', buyPro);
+
+    // Аутентификация
+    authBtn.addEventListener('click', () => {
+      if (currentUser) {
+        // если уже залогинен — покажем профиль
+        profileBtn.click();
+      } else {
+        authModal.classList.add('active');
+      }
+    });
+    closeAuthBtn.addEventListener('click', () => authModal.classList.remove('active'));
+    authModal.addEventListener('click', e => { if (e.target === authModal) authModal.classList.remove('active'); });
+    authLoginBtn.addEventListener('click', authLogin);
+    authRegisterBtn.addEventListener('click', authRegister);
+    // Enter в полях
+    authEmail.addEventListener('keydown', e => { if (e.key === 'Enter') authLogin(); });
+    authPassword.addEventListener('keydown', e => { if (e.key === 'Enter') authLogin(); });
+
+    // Загружаем блоки из localStorage
+    loadFromStorage();
+
+    console.log('🦕 DinoSiteX с Firebase готов!');
+    console.log('Админ UID:', ADMIN_UID);
   </script>
 </body>
 </html>
