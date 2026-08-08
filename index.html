@@ -4,22 +4,24 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DinoSiteX — конструктор сайтов</title>
-  <!-- ===== FAVICON (логотип как SVG) ===== -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='45' fill='%23667eea'/%3E%3Cpath d='M30 65 L35 50 L30 35 L45 25 L60 35 L55 50 L60 65 L45 70 L30 65 Z' fill='%23fff'/%3E%3Ccircle cx='40' cy='42' r='4' fill='%23667eea'/%3E%3Ccircle cx='50' cy='42' r='4' fill='%23667eea'/%3E%3Cpath d='M38 55 Q45 62 52 55' stroke='%23667eea' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+  <!-- ===== FAVICON (тот же логотип) ===== -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' stop-color='%232ecc71'/%3E%3Cstop offset='70%25' stop-color='%231abc9c'/%3E%3Cstop offset='100%25' stop-color='%230b0b1a'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M25 70 L30 50 L25 35 L40 20 L60 30 L55 50 L60 70 L45 80 L25 70 Z' fill='url(%23g)'/%3E%3Ccircle cx='38' cy='42' r='5' fill='%230b0b1a'/%3E%3Ccircle cx='52' cy='42' r='5' fill='%230b0b1a'/%3E%3Cpath d='M36 58 Q45 68 54 58' stroke='%230b0b1a' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
   <!-- ===== FIREBASE ===== -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <style>
-    /* ===== БАЗОВЫЕ СТИЛИ ===== */
+    /* ===== БАЗА ===== */
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0b0b1a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
     .app { max-width: 1400px; margin: 0 auto; padding: 20px 16px; width: 100%; flex: 1; display: flex; flex-direction: column; }
     .header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 24px; }
-    /* ===== ЛОГОТИП (без эмодзи) ===== */
-    .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; cursor: pointer; }
+
+    /* ===== НОВЫЙ ЛОГОТИП ===== */
+    .logo { display: flex; align-items: center; gap: 14px; text-decoration: none; cursor: pointer; }
     .logo svg { width: 48px; height: 48px; }
-    .logo-text { font-size: 32px; font-weight: 900; background: linear-gradient(135deg, #f093fb, #f5576c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 1px; }
+    .logo-text { font-size: 32px; font-weight: 900; background: linear-gradient(135deg, #2ecc71, #1abc9c, #0b0b1a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.5px; }
+
     .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .btn { padding: 10px 22px; border: none; border-radius: 40px; font-weight: 600; font-size: 14px; cursor: pointer; transition: 0.2s; background: rgba(255,255,255,0.06); color: #fff; backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.1); }
     .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); border: none; color: #fff; box-shadow: 0 8px 20px rgba(102,126,234,0.3); }
@@ -30,6 +32,8 @@
     .btn-outline:hover { background: rgba(255,255,255,0.1); }
     .btn-pro { background: linear-gradient(135deg, #f093fb, #f5576c); color: #fff; border: none; }
     .btn-pro:hover { transform: scale(1.05); }
+
+    /* ===== ОСТАЛЬНЫЕ СТИЛИ (без изменений) ===== */
     .main-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; }
     @media (max-width: 900px) { .main-grid { grid-template-columns: 1fr; } }
     .editor-panel { background: rgba(255,255,255,0.04); border-radius: 24px; padding: 20px; backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; gap: 18px; }
@@ -120,7 +124,7 @@
     .gift-link-item .status.active { color: #2ecc71; }
     .gift-link-item .days { color: rgba(255,255,255,0.7); }
     @media (max-width: 600px) {
-      .logo-text { font-size: 24px; }
+      .logo-text { font-size: 22px; }
       .logo svg { width: 36px; height: 36px; }
       .header { flex-direction: column; align-items: stretch; }
       .header-actions { justify-content: center; }
@@ -135,19 +139,22 @@
   <div class="app">
     <header class="header">
       <div class="logo" onclick="location.reload()">
-        <!-- ВЕКТОРНЫЙ ЛОГОТИП (динозавр) -->
+        <!-- НОВЫЙ ЛОГОТИП С ЗЕЛЁНО-ЧЁРНЫМ ГРАДИЕНТОМ -->
         <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="50" cy="50" r="45" fill="url(#logoGrad)" />
-          <path d="M30 65 L35 50 L30 35 L45 25 L60 35 L55 50 L60 65 L45 70 L30 65 Z" fill="#fff" />
-          <circle cx="40" cy="42" r="4" fill="url(#logoGrad)" />
-          <circle cx="50" cy="42" r="4" fill="url(#logoGrad)" />
-          <path d="M38 55 Q45 62 52 55" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" />
           <defs>
-            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#f093fb" />
-              <stop offset="100%" stop-color="#f5576c" />
+            <linearGradient id="dinoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#2ecc71" />
+              <stop offset="60%" stop-color="#1abc9c" />
+              <stop offset="100%" stop-color="#0b0b1a" />
             </linearGradient>
           </defs>
+          <!-- Тело динозавра -->
+          <path d="M25 70 L30 50 L25 35 L40 20 L60 30 L55 50 L60 70 L45 80 L25 70 Z" fill="url(#dinoGrad)" />
+          <!-- Глаза (чёрные) -->
+          <circle cx="38" cy="42" r="5" fill="#0b0b1a" />
+          <circle cx="52" cy="42" r="5" fill="#0b0b1a" />
+          <!-- Улыбка (чёрная) -->
+          <path d="M36 58 Q45 68 54 58" stroke="#0b0b1a" stroke-width="4" fill="none" stroke-linecap="round" />
         </svg>
         <span class="logo-text">DinoSiteX</span>
       </div>
@@ -159,8 +166,9 @@
         <button class="btn btn-outline" id="authBtn">Войти</button>
       </div>
     </header>
+
+    <!-- ===== ОСНОВНАЯ СЕТКА ===== -->
     <div class="main-grid">
-      <!-- ЛЕВАЯ ПАНЕЛЬ: РЕДАКТОР -->
       <section class="editor-panel">
         <h2 class="panel-title">✏️ Редактор</h2>
         <div class="block-toolbar">
@@ -180,9 +188,8 @@
           <button class="btn btn-outline" id="clearBlocksBtn" style="flex:0.5;">Очистить</button>
         </div>
       </section>
-      <!-- ПРАВАЯ ПАНЕЛЬ: ПРЕВЬЮ -->
       <section class="preview-panel">
-        <div class="preview-header"><span class="panel-title">👁️ Превью (перетаскивай, меняй размер)</span><span class="preview-url">Ваш сайт</span></div>
+        <div class="preview-header"><span class="panel-title">👁️ Превью</span><span class="preview-url">Ваш сайт</span></div>
         <div class="preview-frame" id="previewFrame">
           <div class="site-preview" id="sitePreview">
             <div class="empty-preview">Добавьте блоки</div>
@@ -191,11 +198,10 @@
         <button class="btn btn-primary" id="publishBtn" style="align-self: flex-end;">🚀 Опубликовать</button>
       </section>
     </div>
-    <footer class="footer">© 2026 DinoSiteX — конструктор с логотипом</footer>
+    <footer class="footer">© 2026 DinoSiteX — конструктор сайтов</footer>
   </div>
 
-  <!-- ===== МОДАЛКИ ===== -->
-  <!-- Профиль -->
+  <!-- ===== МОДАЛКИ (те же) ===== -->
   <div class="modal" id="profileModal">
     <div class="modal-content">
       <h2>👤 Профиль</h2>
@@ -208,7 +214,6 @@
     </div>
   </div>
 
-  <!-- Вход -->
   <div class="modal" id="authModal">
     <div class="modal-content">
       <h2>🔐 Вход / Регистрация</h2>
@@ -220,7 +225,6 @@
     </div>
   </div>
 
-  <!-- Админ-панель -->
   <div class="modal" id="adminModal">
     <div class="modal-content">
       <h2>⚙️ Админ-панель</h2>
@@ -256,7 +260,6 @@
     </div>
   </div>
 
-  <!-- Оверлей экспорта -->
   <div class="export-overlay" id="exportOverlay">
     <div class="export-content">
       <span class="big-icon">🦕</span>
@@ -293,7 +296,7 @@
     let userPlan = 'free';
     let userExpiry = null;
 
-    // ===== DOM-ссылки =====
+    // ===== DOM-ссылки (все те же) =====
     const blocksList = document.getElementById('blocksList');
     const previewFrame = document.getElementById('sitePreview');
     const exportBtn = document.getElementById('exportBtn');
@@ -365,7 +368,7 @@
       renderPreview();
     }
 
-    // ===== РАБОТА С БЛОКАМИ =====
+    // ===== РАБОТА С БЛОКАМИ (те же функции) =====
     function addBlock(type) {
       const newBlock = {
         type,
@@ -381,14 +384,12 @@
       renderPreview();
       autoSave();
     }
-
     function deleteBlock(idx) {
       blocks.splice(idx, 1);
       renderBlocksList();
       renderPreview();
       autoSave();
     }
-
     function moveBlock(idx, dir) {
       const ni = idx + dir;
       if (ni < 0 || ni >= blocks.length) return;
@@ -397,7 +398,6 @@
       renderPreview();
       autoSave();
     }
-
     function clearBlocks() {
       if (!blocks.length) return;
       if (confirm('Удалить все блоки?')) {
@@ -407,11 +407,7 @@
         autoSave();
       }
     }
-
-    function autoSave() {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
-    }
-
+    function autoSave() { localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks)); }
     function loadFromStorage() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -426,7 +422,6 @@
       renderBlocksList();
       renderPreview();
     }
-
     function resetProject() {
       if (!confirm('Сбросить проект?')) return;
       localStorage.removeItem(STORAGE_KEY);
@@ -438,7 +433,6 @@
 
     // ===== РЕНДЕРИНГ СПИСКА (редактор) =====
     let dragIndex = null;
-
     function renderBlocksList() {
       blocksList.innerHTML = '';
       blocks.forEach((block, index) => {
@@ -446,7 +440,7 @@
         div.className = 'block-item';
         div.draggable = true;
         div.dataset.index = index;
-
+        // drag events
         div.addEventListener('dragstart', (e) => {
           dragIndex = index;
           div.classList.add('dragging');
@@ -519,7 +513,7 @@
           inp.value = block.data || '';
           inp.oninput = () => { block.data = inp.value; renderPreview(); autoSave(); };
           div.appendChild(inp);
-          // Кнопка загрузки с устройства
+          // загрузка с устройства
           const uploadRow = document.createElement('div');
           uploadRow.className = 'upload-row';
           const fileInput = document.createElement('input');
@@ -537,7 +531,7 @@
               block.data = ev.target.result;
               renderPreview();
               autoSave();
-              renderBlocksList(); // обновляем список, чтобы показать ссылку
+              renderBlocksList();
             };
             reader.readAsDataURL(file);
           };
@@ -555,9 +549,8 @@
       });
     }
 
-    // ===== РЕНДЕРИНГ ПРЕВЬЮ (с абсолютным позиционированием, drag & drop, resize 8 ручек) =====
+    // ===== РЕНДЕРИНГ ПРЕВЬЮ =====
     let selectedIndex = null;
-
     function renderPreview() {
       const container = previewFrame;
       let html = '';
@@ -600,26 +593,23 @@
       const items = container.querySelectorAll('.preview-item');
       items.forEach(item => {
         const idx = parseInt(item.dataset.index);
-        // Выделение по клику
         item.addEventListener('mousedown', (e) => {
           if (e.target.classList.contains('resize-handle')) return;
           selectedIndex = idx;
           renderPreview();
           startDrag(e, idx);
         });
-        // Ручки изменения размера
         const handles = item.querySelectorAll('.resize-handle');
         handles.forEach(handle => {
           handle.addEventListener('mousedown', (e) => {
             e.stopPropagation();
             e.preventDefault();
-            const dir = handle.className.split(' ')[1]; // tl, tr, bl, br, tc, bc, ml, mr
+            const dir = handle.className.split(' ')[1];
             startResize(e, idx, dir);
           });
         });
       });
 
-      // Применяем фон
       const bg = getBgSettings();
       container.style.background = bg.color || '#1a1a2e';
       container.style.backgroundImage = bg.image ? 'url(' + bg.image + ')' : 'none';
@@ -627,7 +617,6 @@
       container.style.backgroundPosition = 'center';
     }
 
-    // ===== ПЕРЕТАСКИВАНИЕ =====
     function startDrag(e, idx) {
       if (e.button !== 0) return;
       const item = e.currentTarget;
@@ -651,17 +640,14 @@
         renderPreview();
         autoSave();
       }
-
       function onUp() {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
       }
-
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     }
 
-    // ===== ИЗМЕНЕНИЕ РАЗМЕРА (8 направлений) =====
     function startResize(e, idx, dir) {
       e.preventDefault();
       const item = e.currentTarget.parentElement;
@@ -680,7 +666,6 @@
         let dy = ev.clientY - startY;
         let newX = startL, newY = startT, newW = startW, newH = startH;
 
-        // Обработка направления
         if (dir.includes('r')) { newW = Math.max(50, startW + dx); }
         if (dir.includes('l')) { newX = startL + dx; newW = Math.max(50, startW - dx); }
         if (dir.includes('b')) { newH = Math.max(30, startH + dy); }
@@ -690,7 +675,6 @@
         if (dir === 'ml') { newX = startL + dx; newW = Math.max(50, startW - dx); }
         if (dir === 'mr') { newW = Math.max(50, startW + dx); }
 
-        // Ограничения
         const maxW = containerRect.width - newX;
         const maxH = containerRect.height - newY;
         newW = Math.min(newW, maxW);
@@ -705,17 +689,15 @@
         renderPreview();
         autoSave();
       }
-
       function onUp() {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
       }
-
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
     }
 
-    // ===== ЭКСПОРТ (без водяного знака для PRO) =====
+    // ===== ЭКСПОРТ =====
     function generateSiteHTML() {
       if (blocks.length === 0) { alert('Добавьте блоки'); return null; }
       let content = '';
@@ -738,7 +720,6 @@
       });
 
       let footer = '';
-      // Водяной знак только если FREE
       if (userPlan === 'free') {
         footer = `<div class="footer">Создано в <a href="${BASE_URL}" target="_blank" style="color:#f093fb;text-decoration:none;">DinoSiteX</a></div>`;
       }
@@ -755,7 +736,6 @@
       watermarkInfo.textContent = userPlan === 'free' ? '⚠️ Бесплатный план — водяной знак' : '✅ PRO — без водяного знака';
       exportOverlay.classList.add('active');
     }
-
     function downloadSite() {
       const html = generateSiteHTML();
       if (!html) return;
@@ -831,7 +811,6 @@
       }
     }
 
-    // ===== ОПЛАТА (заглушка) =====
     function buyProStub() {
       alert('💎 Оплата временно недоступна. Обратитесь к администратору.');
     }
@@ -1079,7 +1058,7 @@
     });
 
     loadFromStorage();
-    console.log('🦕 DinoSiteX с новым логотипом и favicon готов!');
+    console.log('🦕 DinoSiteX с новым логотипом (зелёный градиент) готов!');
     console.log('Админ UID:', ADMIN_UID);
   </script>
 </body>
