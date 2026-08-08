@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5">
+  <title>DinoSiteX — конструктор сайтов</title>
+  <style>
+    /* ===== RESET & БАЗА ===== */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0b0b1a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* ===== ГЛАВНЫЙ КОНТЕЙНЕР ===== */
+    .app {
+      max-width: 1300px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      width: 100%;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ===== ШАПКА С ЛОГОТИПОМ ===== */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      margin-bottom: 24px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 28px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo span { font-size: 34px; -webkit-text-fill-color: initial; }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 40px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      backdrop-filter: blur(4px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: #fff;
+      box-shadow: 0 8px 20px rgba(102,126,234,0.3);
+    }
+    .btn-primary:hover { transform: scale(1.03); box-shadow: 0 12px 28px rgba(102,126,234,0.5); }
+    .btn-success {
+      background: #2ecc71;
+      color: #0b0b1a;
+      border: none;
+    }
+    .btn-success:hover { background: #27ae60; transform: scale(1.03); }
+    .btn-danger {
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+    }
+    .btn-danger:hover { background: #c0392b; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.3);
+    }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
+
+    /* ===== ОСНОВНАЯ СЕТКА ===== */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+    }
+    @media (max-width: 900px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ===== ПАНЕЛЬ РЕДАКТОРА ===== */
+    .editor-panel {
+      background: rgba(255,255,255,0.04);
+      border-radius: 24px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .panel-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      letter-spacing: 0.5px;
+    }
+    .subdomain-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: rgba(0,0,0,0.3);
+      padding: 12px 16px;
+      border-radius: 16px;
+    }
+    .subdomain-row label { color: rgba(255,255,255,0.6); font-weight: 500; }
+    .subdomain-row input {
+      flex: 1;
+      min-width: 120px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid rgba(255,255,255,0.2);
+      color: #fff;
+      font-size: 18px;
+      padding: 4px 0;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .subdomain-row input:focus { border-bottom-color: #667eea; }
+    .subdomain-row .domain-suffix {
+      color: rgba(255,255,255,0.4);
+      font-size: 16px;
+      white-space: nowrap;
+    }
+
+    .block-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 8px 0;
+    }
+    .block-toolbar .btn {
+      flex: 1 0 auto;
+      font-size: 13px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 30px;
+      text-align: center;
+    }
+    .block-toolbar .btn:hover { background: rgba(255,255,255,0.18); }
+
+    .blocks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 500px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .blocks-list::-webkit-scrollbar { width: 4px; }
+    .blocks-list::-webkit-scrollbar-thumb { background: #667eea; border-radius: 8px; }
+
+    .block-item {
+      background: rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-left: 4px solid #667eea;
+      transition: background 0.15s;
+    }
+    .block-item:hover { background: rgba(255,255,255,0.09); }
+    .block-item .block-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .block-item .block-type {
+      font-size: 12px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      letter-spacing: 1px;
+    }
+    .block-item .block-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .block-item .block-actions button {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.4);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0 4px;
+      transition: color 0.2s;
+    }
+    .block-item .block-actions button:hover { color: #fff; }
+    .block-item .block-actions .del:hover { color: #e74c3c; }
+
+    .block-item input, .block-item textarea {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px 14px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      transition: border 0.2s;
+      font-family: inherit;
+    }
+    .block-item input:focus, .block-item textarea:focus { border-color: #667eea; }
+    .block-item textarea { min-height: 60px; resize: vertical; }
+
+    /* ===== ПАНЕЛЬ ПРЕВЬЮ ===== */
+    .preview-panel {
+      background: rgba(255,255,255,0.04);
+      border-radius: 24px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,0.06);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .preview-panel .preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .preview-panel .preview-url {
+      font-size: 14px;
+      color: rgba(255,255,255,0.5);
+      background: rgba(0,0,0,0.3);
+      padding: 6px 16px;
+      border-radius: 30px;
+      word-break: break-all;
+    }
+    .preview-frame {
+      background: #1a1a2e;
+      border-radius: 16px;
+      padding: 20px;
+      min-height: 400px;
+      overflow: auto;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    .preview-frame .site-preview {
+      color: #eee;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .preview-frame .site-preview h2 { color: #f093fb; margin: 12px 0 6px; }
+    .preview-frame .site-preview p { margin: 8px 0; }
+    .preview-frame .site-preview img { max-width: 100%; border-radius: 12px; margin: 10px 0; }
+    .preview-frame .site-preview .btn-preview {
+      display: inline-block;
+      padding: 8px 24px;
+      background: #667eea;
+      border-radius: 40px;
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: default;
+    }
+    .empty-preview {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: rgba(255,255,255,0.25);
+      font-size: 18px;
+    }
+
+    /* ===== ФУТЕР ===== */
+    .footer {
+      margin-top: 30px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+      text-align: center;
+      font-size: 14px;
+      color: rgba(255,255,255,0.25);
+    }
+
+    /* ===== АДАПТИВ ===== */
+    @media (max-width: 600px) {
+      .logo { font-size: 22px; }
+      .header { flex-direction: column; align-items: stretch; }
+      .header-actions { justify-content: center; }
+      .subdomain-row input { font-size: 16px; }
+      .block-toolbar .btn { flex: 1; font-size: 12px; padding: 6px 12px; }
+      .preview-frame { min-height: 250px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <!-- Шапка -->
+    <header class="header">
+      <div class="logo">
+        <span>🦕</span> DinoSiteX
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-outline" id="resetBtn">Сбросить</button>
+        <button class="btn btn-success" id="exportBtn">📥 Скачать сайт</button>
+      </div>
+    </header>
+
+    <!-- Основная сетка -->
+    <div class="main-grid">
+      <!-- ЛЕВАЯ ПАНЕЛЬ: редактор -->
+      <section class="editor-panel">
+        <h2 class="panel-title">✏️ Редактор</h2>
+
+        <!-- Поддомен -->
+        <div class="subdomain-row">
+          <label>Поддомен:</label>
+          <input type="text" id="subdomainInput" placeholder="мойпроект" value="мойсайт">
+          <span class="domain-suffix">.DinoSiteX.ваш-домен</span>
+        </div>
+
+        <!-- Панель добавления блоков -->
+        <div class="block-toolbar">
+          <button class="btn" data-block="header">➕ Заголовок</button>
+          <button class="btn" data-block="text">➕ Текст</button>
+          <button class="btn" data-block="image">➕ Картинка</button>
+          <button class="btn" data-block="button">➕ Кнопка</button>
+        </div>
+
+        <!-- Список блоков -->
+        <div class="blocks-list" id="blocksList"></div>
+
+        <div style="margin-top: auto; display: flex; gap: 12px; flex-wrap: wrap;">
+          <button class="btn btn-primary" id="saveBtn" style="flex:1;">💾 Сохранить проект</button>
+          <button class="btn btn-outline" id="clearBlocksBtn" style="flex:0.5;">Очистить</button>
+        </div>
+      </section>
+
+      <!-- ПРАВАЯ ПАНЕЛЬ: превью -->
+      <section class="preview-panel">
+        <div class="preview-header">
+          <span class="panel-title">👁️ Превью</span>
+          <span class="preview-url" id="previewUrl">мойсайт.DinoSiteX.ваш-домен</span>
+        </div>
+        <div class="preview-frame" id="previewFrame">
+          <div class="site-preview" id="sitePreview">
+            <div class="empty-preview">Добавьте блоки слева, чтобы увидеть сайт</div>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="publishBtn" style="align-self: flex-end;">🚀 Опубликовать (скачать HTML)</button>
+      </section>
+    </div>
+
+    <footer class="footer">© 2026 DinoSiteX — конструктор без сервера. Все данные локально.</footer>
+  </div>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // ===== СОСТОЯНИЕ =====
+      let blocks = [];            // массив { type, data }
+      let subdomain = 'мойсайт';
+      const STORAGE_KEY = 'dinositex_blocks';
+      const SUB_KEY = 'dinositex_subdomain';
+
+      // ===== DOM-ссылки =====
+      const blocksList = document.getElementById('blocksList');
+      const previewFrame = document.getElementById('sitePreview');
+      const previewUrl = document.getElementById('previewUrl');
+      const subInput = document.getElementById('subdomainInput');
+      const exportBtn = document.getElementById('exportBtn');
+      const publishBtn = document.getElementById('publishBtn');
+      const saveBtn = document.getElementById('saveBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const clearBlocksBtn = document.getElementById('clearBlocksBtn');
+
+      // ===== ФУНКЦИИ РЕНДЕРИНГА =====
+
+      // Обновить превью
+      function renderPreview() {
+        let html = '';
+        if (blocks.length === 0) {
+          html = `<div class="empty-preview">Добавьте блоки слева, чтобы увидеть сайт</div>`;
+        } else {
+          blocks.forEach(block => {
+            const data = block.data || '';
+            switch (block.type) {
+              case 'header':
+                html += `<h2>${escapeHtml(data)}</h2>`;
+                break;
+              case 'text':
+                html += `<p>${escapeHtml(data).replace(/\n/g, '<br>')}</p>`;
+                break;
+              case 'image':
+                html += data ? `<img src="${escapeHtml(data)}" alt="image">` : '<p style="color:gray;">[картинка]</p>';
+                break;
+              case 'button':
+                html += `<a class="btn-preview" style="display:inline-block;padding:8px 24px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">${escapeHtml(data) || 'Кнопка'}</a>`;
+                break;
+              default: html += `<div>${escapeHtml(data)}</div>`;
+            }
+          });
+        }
+        previewFrame.innerHTML = html;
+
+        // Обновить URL превью
+        const sub = subdomain.trim() || 'проект';
+        previewUrl.textContent = `${sub}.DinoSiteX.ваш-домен`;
+      }
+
+      // Экранирование HTML
+      function escapeHtml(text) {
+        if (!text) return '';
+        const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+        return text.replace(/[&<>"']/g, m => map[m]);
+      }
+
+      // Рендеринг списка блоков (с редактированием)
+      function renderBlocksList() {
+        blocksList.innerHTML = '';
+        blocks.forEach((block, index) => {
+          const div = document.createElement('div');
+          div.className = 'block-item';
+          div.dataset.index = index;
+
+          // Заголовок блока
+          const header = document.createElement('div');
+          header.className = 'block-header';
+          const typeLabel = document.createElement('span');
+          typeLabel.className = 'block-type';
+          const typeNames = { header: 'Заголовок', text: 'Текст', image: 'Картинка', button: 'Кнопка' };
+          typeLabel.textContent = typeNames[block.type] || block.type;
+
+          const actions = document.createElement('div');
+          actions.className = 'block-actions';
+          const upBtn = document.createElement('button');
+          upBtn.textContent = '↑';
+          upBtn.title = 'Вверх';
+          upBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveBlock(index, -1);
+          });
+          const downBtn = document.createElement('button');
+          downBtn.textContent = '↓';
+          downBtn.title = 'Вниз';
+          downBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            moveBlock(index, 1);
+          });
+          const delBtn = document.createElement('button');
+          delBtn.textContent = '✕';
+          delBtn.className = 'del';
+          delBtn.title = 'Удалить';
+          delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteBlock(index);
+          });
+          actions.append(upBtn, downBtn, delBtn);
+          header.append(typeLabel, actions);
+          div.appendChild(header);
+
+          // Редактируемое поле
+          let input;
+          if (block.type === 'text') {
+            input = document.createElement('textarea');
+            input.placeholder = 'Введите текст...';
+            input.value = block.data || '';
+            input.addEventListener('input', () => {
+              blocks[index].data = input.value;
+              renderPreview();
+              autoSave();
+            });
+          } else {
+            input = document.createElement('input');
+            input.placeholder = block.type === 'image' ? 'URL картинки...' : block.type === 'button' ? 'Текст кнопки...' : 'Введите заголовок...';
+            input.value = block.data || '';
+            input.addEventListener('input', () => {
+              blocks[index].data = input.value;
+              renderPreview();
+              autoSave();
+            });
+          }
+          div.appendChild(input);
+
+          blocksList.appendChild(div);
+        });
+        renderPreview();
+      }
+
+      // ===== ОПЕРАЦИИ С БЛОКАМИ =====
+      function addBlock(type) {
+        blocks.push({ type, data: '' });
+        renderBlocksList();
+        autoSave();
+      }
+
+      function deleteBlock(index) {
+        blocks.splice(index, 1);
+        renderBlocksList();
+        autoSave();
+      }
+
+      function moveBlock(index, direction) {
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= blocks.length) return;
+        [blocks[index], blocks[newIndex]] = [blocks[newIndex], blocks[index]];
+        renderBlocksList();
+        autoSave();
+      }
+
+      function clearBlocks() {
+        if (blocks.length === 0) return;
+        if (confirm('Удалить все блоки?')) {
+          blocks = [];
+          renderBlocksList();
+          autoSave();
+        }
+      }
+
+      // ===== СОХРАНЕНИЕ / ЗАГРУЗКА =====
+      function autoSave() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(blocks));
+        localStorage.setItem(SUB_KEY, subdomain);
+      }
+
+      function loadFromStorage() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) blocks = parsed;
+          } catch(e) {}
+        }
+        const savedSub = localStorage.getItem(SUB_KEY);
+        if (savedSub) subdomain = savedSub;
+        subInput.value = subdomain;
+        renderBlocksList();
+      }
+
+      function resetProject() {
+        if (!confirm('Сбросить проект? Все несохранённые изменения будут потеряны.')) return;
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(SUB_KEY);
+        blocks = [];
+        subdomain = 'мойсайт';
+        subInput.value = subdomain;
+        renderBlocksList();
+        autoSave();
+      }
+
+      // ===== ЭКСПОРТ (скачать HTML) =====
+      function exportSite() {
+        if (blocks.length === 0) {
+          alert('Добавьте хотя бы один блок, чтобы экспортировать сайт.');
+          return;
+        }
+        const sub = subdomain.trim() || 'проект';
+        // Строим HTML контент
+        let contentHtml = '';
+        blocks.forEach(block => {
+          const data = escapeHtml(block.data || '');
+          switch (block.type) {
+            case 'header': contentHtml += `<h2>${data}</h2>`; break;
+            case 'text': contentHtml += `<p>${data.replace(/\n/g, '<br>')}</p>`; break;
+            case 'image': contentHtml += data ? `<img src="${data}" alt="image" style="max-width:100%;">` : ''; break;
+            case 'button': contentHtml += `<a href="#" style="display:inline-block;padding:10px 30px;background:#667eea;border-radius:40px;color:#fff;text-decoration:none;font-weight:600;">${data || 'Кнопка'}</a>`; break;
+            default: contentHtml += `<div>${data}</div>`;
+          }
+        });
+
+        const fullHtml = `<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${sub} — DinoSiteX</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #0b0b1a; color: #eee; line-height: 1.6; }
+    h2 { color: #f093fb; margin: 20px 0 10px; }
+    p { margin: 10px 0; }
+    img { max-width: 100%; border-radius: 12px; margin: 10px 0; }
+    a { color: #667eea; }
+    .footer { margin-top: 40px; font-size: 14px; color: #444; text-align: center; border-top: 1px solid #222; padding-top: 20px; }
+  </style>
+</head>
+<body>
+  ${contentHtml}
+  <div class="footer">Создано в DinoSiteX • ${sub}.DinoSiteX.ваш-домен</div>
+</body>
+</html>`;
+
+        const blob = new Blob([fullHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${sub}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      // ===== СОБЫТИЯ =====
+
+      // Добавление блоков по кнопкам
+      document.querySelectorAll('[data-block]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          addBlock(btn.dataset.block);
+        });
+      });
+
+      // Поддомен
+      subInput.addEventListener('input', () => {
+        subdomain = subInput.value.trim() || 'проект';
+        autoSave();
+        renderPreview();
+      });
+
+      // Сохранить (вручную)
+      saveBtn.addEventListener('click', () => {
+        autoSave();
+        alert('Проект сохранён в localStorage!');
+      });
+
+      // Экспорт (скачать)
+      exportBtn.addEventListener('click', exportSite);
+      publishBtn.addEventListener('click', exportSite);
+
+      // Сброс
+      resetBtn.addEventListener('click', resetProject);
+
+      // Очистить блоки
+      clearBlocksBtn.addEventListener('click', clearBlocks);
+
+      // ===== ИНИЦИАЛИЗАЦИЯ =====
+      loadFromStorage();
+
+      // Поддержка ввода через Enter в полях — не требуется
+
+      console.log('🦕 DinoSiteX готов к работе!');
+    })();
+  </script>
+</body>
+</html>
